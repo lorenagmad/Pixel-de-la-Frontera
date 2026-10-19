@@ -10,19 +10,12 @@ Eres el becario de la agencia **Píxel de la Frontera** y tienes que preparar to
 - **Móvil:** botones en pantalla. Mejor en horizontal.
 - El signo **!** indica dónde hay una tarea pendiente. El botón **Tareas** muestra lo que te falta y **Chuleta** tiene las fórmulas.
 
-## Guardar la partida y cambiar de dispositivo
+## Mi partida: un solo archivo
 
-- El progreso se guarda **en el navegador del dispositivo** en el que juegas. En otro ordenador o móvil, o en modo incógnito, empezarás de cero.
-- Para seguir en otro dispositivo: **Menú › Llevarme la partida** descarga un archivo. En el otro dispositivo, pulsa **Cargar partida** en la pantalla de inicio y elige ese archivo.
-- **Menú › Guardar y salir** guarda y vuelve a la pantalla de inicio.
-
-## Entrega del registro de actividad
-
-Al empezar, el juego pide tu nombre y tu correo de la UCA. Tus acciones se guardan en formato **xAPI** para que el profesorado analice el aprendizaje.
-
-- Al terminar el juego aparece el botón **Descargar registro (xAPI)**. También está en **Menú › Registro de actividad**.
-- Entrega el archivo a tu profesor/a por correo o en la tarea del Campus Virtual.
-- El archivo de **«Llevarme la partida»** también sirve como entrega: incluye el registro completo.
+- Al empezar, el juego pide tu nombre y tu correo de la UCA. Tu partida y tus acciones se guardan en el navegador.
+- En **Menú › Mi partida** (y al terminar el juego o al pulsar **Guardar y salir**) descargas **un único archivo** que sirve para dos cosas:
+  - **Entregarlo** a tu profesor/a, por correo o en la tarea del Campus Virtual.
+  - **Seguir en otro ordenador o móvil**: en la pantalla de inicio pulsa **Cargar partida** y elige el archivo.
 - Tus datos identificativos no se publicarán. Si los resultados se difunden, se usará solo un código anónimo (PF-…).
 
 ## Para el profesorado

@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Píxel de la Frontera · Operación Feria</title>
 <meta name="description" content="Juego de plataformas educativo: el becario de la agencia Píxel de la Frontera prepara la publicidad de la Feria de Jerez repasando los temas 1, 2 y 3 de la asignatura.">
-<meta property="og:title" content="Píxel de la Frontera · Operación Feria">
-<meta property="og:description" content="Juego de plataformas educativo sobre imagen digital y publicidad.">
 <meta name="theme-color" content="#1F2A44">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8F%AE%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -544,7 +542,7 @@ const me=()=>CHARS.find(c=>c.id===save.char)||CHARS[0];
    Para enviarlas a un LRS (Learning Record Store), rellena endpoint y auth:
      endpoint: 'https://tu-lrs.ejemplo/xapi/'   (termina en /)
      auth:     'Basic ' + btoa('clave:secreto')  (usa unas credenciales SOLO de escritura)
-   Sin LRS, todo queda guardado en el navegador y se puede descargar desde Menú › Registro de actividad.
+   Sin LRS, todo queda guardado en el navegador y se descarga desde Menú › Mi partida.
    En el visor de claude.ai las conexiones externas están bloqueadas: el envío al LRS funciona al publicarlo en GitHub Pages u otra web. */
 const XAPI={endpoint:'',auth:'',base:'https://pixeldelafrontera.uca.es/xapi'};
 const VERB={
@@ -616,18 +614,21 @@ function toCSV(){const q=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';cons
   return '\ufeff'+rows.map(r=>r.map(q).join(';')).join('\n')}
 function saveAndQuit(){save.x=Math.round(P.x);persist();xlog('suspended',xact('juego','pixel-de-la-frontera','Píxel de la Frontera'),null,{[XAPI.base+'/ext/motivo']:'guardar y salir'});xflush(true);
   openModal(`<h2>${canSave?'✔ Progreso guardado':'⚠️ No se ha podido guardar'}</h2>
-  ${canSave?`<p>Tienes <b>${save.done.length} de ${TASKS.length}</b> tareas hechas y <b>${save.score}</b> puntos. La próxima vez que abras el juego <b>en este mismo dispositivo y navegador</b>, seguirás justo donde lo has dejado.</p>`:`<p>Este navegador no permite guardar datos (por ejemplo, en modo incógnito o con el almacenamiento bloqueado). Al cerrar la página se perderá la partida.</p>`}
-  <div style="border:2px solid var(--albero);border-radius:10px;padding:12px 14px;margin-top:10px"><b>💻 Ten en cuenta</b>
-  <ul style="margin:6px 0 0;padding-left:20px"><li>El progreso se guarda <b>solo en este ordenador o móvil</b>. Si juegas desde otro (casa, portátil, aulas de la universidad…) empezarás de cero.</li><li>También se pierde si usas el modo incógnito o si se borran los datos del navegador. En los ordenadores de la universidad puede pasar al cerrar sesión.</li><li>Para seguir en otro dispositivo, pulsa <b>«Llevarme la partida»</b>: descargas un archivo, te lo envías (por correo, por ejemplo) y en el otro dispositivo pulsas <b>«Cargar partida»</b> en la pantalla de inicio. Ese archivo lleva también tu registro completo.</li></ul></div>
-  <div class="actions"><button class="btn" id="sqHome">Ir a la pantalla de inicio</button><button class="btn sec" id="sqTake">Llevarme la partida a otro dispositivo</button></div>`);
+  <p>${canSave?`Tu partida (${save.done.length} de ${TASKS.length} tareas, ${save.score} puntos) se ha guardado en este ordenador. Si tienes que entregarla o vas a seguir en otro ordenador, descarga tu archivo.`:'Este navegador no permite guardar (por ejemplo, en modo incógnito). Descarga tu archivo para no perder la partida.'}</p>
+  <div class="actions"><button class="btn" id="sqHome">Ir a la pantalla de inicio</button><button class="btn sec" id="sqTake">Descargar mi archivo</button></div><p id="sqOk" style="margin:8px 0 0"></p>`);
   $('#sqHome').onclick=()=>{closeModal(true);running=false;paused=true;$('#startBtn').textContent='Seguir trabajando';show('title')};
-  $('#sqTake').onclick=takeGame}
+  $('#sqTake').onclick=async()=>{if(await downloadMyFile())$('#sqOk').textContent='✔ Archivo descargado.'}}
 /* ---- llevar y cargar la partida entre dispositivos ---- */
-function takeGame(){save.x=Math.round(P.x);persist();const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
-  xlog('suspended',xact('juego','pixel-de-la-frontera','Píxel de la Frontera'),null,{[XAPI.base+'/ext/motivo']:'llevarse la partida'});
-  const pack={format:'pixel-frontera-partida',version:1,exported:new Date().toISOString(),id:ID,save,xapi:XLOG};
-  openModal(`<h2>Llevarme la partida</h2><p>Descarga este archivo y envíatelo (por correo, a tu nube o en un pendrive). En el otro ordenador o móvil, abre el juego y pulsa <b>«Cargar partida»</b> en la pantalla de inicio.</p><p>El archivo lleva tu progreso (${save.done.length} de ${TASKS.length} tareas, ${save.score} puntos) y tu registro de actividad completo. También sirve para entregárselo al profesorado.</p><div class="actions"><button class="btn" id="tkDl">Descargar archivo de partida</button><button class="btn sec" id="tkBack">Volver</button></div>`);
-  $('#tkDl').onclick=async()=>{const ok=await saveFile(`pixel-frontera_partida_${tag}.json`,JSON.stringify(pack));if(ok)flash('Archivo de partida descargado')};$('#tkBack').onclick=()=>menu()}
+function downloadMyFile(){if(running){save.x=Math.round(P.x)}persist();
+  xlog('suspended',xact('juego','pixel-de-la-frontera','Píxel de la Frontera'),null,{[XAPI.base+'/ext/motivo']:'descargar archivo'});
+  const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,16).replace(/[-:T]/g,'');
+  return saveFile(`pixel-frontera_${tag}.json`,JSON.stringify({format:'pixel-frontera-partida',version:1,exported:new Date().toISOString(),id:ID,save,xapi:XLOG}))}
+function myGame(){openModal(`<h2>Mi partida</h2><p><b>${ID?ID.name:'—'}</b> · ${save.done.length} de ${TASKS.length} tareas · ${save.score} puntos</p>
+  <p>Tu partida y tus acciones se guardan en este ordenador. Descarga tu archivo para:</p>
+  <ul style="margin:4px 0;padding-left:20px"><li><b>Entregarlo</b> a tu profesor/a, por correo o en la tarea del Campus Virtual.</li><li><b>Seguir en otro ordenador o móvil</b>: allí pulsa «Cargar partida» en la pantalla de inicio.</li></ul>
+  <div class="actions"><button class="btn" id="mgDl">Descargar mi archivo</button><button class="btn sec" id="mgBack">Volver</button></div><p id="mgOk" style="margin:8px 0 0"></p>`);
+  $('#mgDl').onclick=async()=>{if(await downloadMyFile())$('#mgOk').textContent='✔ Archivo descargado.'};$('#mgBack').onclick=()=>menu()}
+const takeGame=myGame,logModal=myGame;
 function mergeLogs(a,b){const m=new Map();[...a,...b].forEach(s=>{if(s&&s.id)m.set(s.id,s)});return [...m.values()].sort((x,y)=>x.timestamp<y.timestamp?-1:1)}
 function applyLoaded(pk,keepLocal){if(!keepLocal){save=pk.save;persist()}ID=pk.id;store.set('pdf_id',ID);XLOG=mergeLogs(XLOG,pk.xapi||[]);store.set('pdf_xapi',XLOG);
   xlog('resumed',xact('juego','pixel-de-la-frontera','Píxel de la Frontera'),null,{[XAPI.base+'/ext/motivo']:'partida cargada desde archivo'});
@@ -635,7 +636,7 @@ function applyLoaded(pk,keepLocal){if(!keepLocal){save=pk.save;persist()}ID=pk.i
 $('#loadBtn').onclick=()=>{$('#loadFile').value='';$('#loadFile').click()};
 $('#loadFile').onchange=async()=>{const f=$('#loadFile').files[0];if(!f)return;let pk=null;
   try{pk=JSON.parse(await f.text())}catch(e){}
-  const bad=()=>openModal(`<h2>Archivo no válido</h2><p>Este archivo no es una partida de Píxel de la Frontera. Busca el que se llama <b>pixel-frontera_partida_…json</b>.</p><div class="actions"><button class="btn" onclick="closeModal(true)">Vale</button></div>`);
+  const bad=()=>openModal(`<h2>Archivo no válido</h2><p>Este archivo no es una partida de Píxel de la Frontera. Busca el que se llama <b>pixel-frontera_…json</b>.</p><div class="actions"><button class="btn" onclick="closeModal(true)">Vale</button></div>`);
   if(!pk||pk.format!=='pixel-frontera-partida'||!pk.save||!pk.id||!pk.id.email)return bad();
   const same=!ID||ID.email===pk.id.email,localDone=(save.done||[]).length,fileDone=pk.save.done.length;
   if(!same){openModal(`<h2>¿Cargar la partida de ${pk.id.name}?</h2><p>En este dispositivo hay una partida de <b>${ID.name}</b>. Si cargas la de ${pk.id.name}, la de ${ID.name} se sustituirá.</p><p style="color:var(--muted)">Si ${ID.name} todavía no ha entregado su registro, que lo descargue antes desde el menú del juego.</p><div class="actions"><button class="btn" id="ldYes">Cargar la de ${pk.id.name}</button><button class="btn sec" onclick="closeModal(true)">Cancelar</button></div>`);
@@ -643,15 +644,6 @@ $('#loadFile').onchange=async()=>{const f=$('#loadFile').files[0];if(!f)return;l
   if(localDone>fileDone&&save.char){openModal(`<h2>¿Qué progreso quieres conservar?</h2><p>Este dispositivo va más avanzado (<b>${localDone}</b> tareas) que el archivo (<b>${fileDone}</b>). El registro de actividad de los dos se juntará en uno igualmente.</p><div class="actions"><button class="btn" id="ldLocal">Seguir con el de este dispositivo</button><button class="btn sec" id="ldFile">Usar el del archivo</button></div>`);
     $('#ldLocal').onclick=()=>applyLoaded(pk,true);$('#ldFile').onclick=()=>applyLoaded(pk,false);return}
   openModal(`<h2>Partida encontrada</h2><p><b>${pk.id.name}</b> · ${fileDone} de ${TASKS.length} tareas · ${pk.save.score} puntos.</p><div class="actions"><button class="btn" id="ldGo">Cargar y seguir jugando</button><button class="btn sec" onclick="closeModal(true)">Cancelar</button></div>`);$('#ldGo').onclick=()=>applyLoaded(pk,false)};
-function logModal(){const ok=XLOG.length,pend=XPEND.length;
-  openModal(`<h2>Registro de actividad</h2><p>Jugador: <b>${ID?ID.name:'—'}</b> (${ID?ID.email:'—'}). Acciones registradas: <b>${ok}</b>.</p>
-   <p style="color:var(--muted);font-size:15px">${XAPI.endpoint?(pend?`Pendientes de enviar al LRS: ${pend}. ${xLastErr}`:'Todo enviado al LRS del profesorado.'):'Tu registro se guarda en este navegador. Al terminar (o cuando te lo pidan), descárgalo y entrégalo a tu profesor/a por correo o en la tarea del Campus Virtual.'}</p>
-   <div class="actions"><button class="btn" id="dlJson">Descargar xAPI (JSON)</button><button class="btn sec" id="dlCsv">Descargar para minería de procesos (CSV)</button></div>
-   <div class="actions"><button class="btn sec" id="lgBack">Volver</button></div>`);
-  const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,10);
-  $('#dlJson').onclick=()=>saveFile(`pixel-frontera_xapi_${tag}.json`,JSON.stringify(XLOG,null,1));
-  $('#dlCsv').onclick=()=>saveFile(`pixel-frontera_eventos_${tag}.csv`,toCSV());
-  $('#lgBack').onclick=()=>menu()}
 
 /* ============ MOTOR DE PLATAFORMAS ============ */
 const cv=$('#cv'),ctx=cv.getContext('2d');const VW=640,VH=360;ctx.setTransform(2,0,0,2,0,0);ctx.imageSmoothingEnabled=false;
@@ -935,19 +927,17 @@ function cheat(){xlog('experienced',xact('recurso','chuleta','Chuleta del becari
  <p class="formula">Proporción a:b → a = aα, b = bα · píxeles = bits ÷ prof. · α = √(píxeles ÷ (a × b))</p>
  <div class="actions"><button class="btn" onclick="closeModal()">Volver</button></div>`)}
 function menu(){openModal(`<h2>Menú</h2><p>Puntos: <b>${save.score}</b>. Tareas hechas: <b>${save.done.length}</b> de ${TASKS.length}.</p>${canSave?'':'<p>Este navegador no permite guardar: el progreso se pierde al cerrar la página.</p>'}
-  <div class="actions"><button class="btn" id="mBack">Volver al juego</button><button class="btn sec" id="mSaveQuit">Guardar y salir</button><button class="btn sec" id="mTake">Llevarme la partida</button><button class="btn sec" id="mLog">Registro de actividad</button><button class="btn sec" id="mChar">Cambiar becario</button><button class="btn sec" id="mReset">Empezar de cero</button></div>`);
-  $('#mBack').onclick=()=>closeModal();$('#mLog').onclick=()=>logModal();$('#mSaveQuit').onclick=saveAndQuit;$('#mTake').onclick=takeGame;$('#mChar').onclick=()=>{closeModal(true);running=false;renderChars();show('chars')};
+  <div class="actions"><button class="btn" id="mBack">Volver al juego</button><button class="btn sec" id="mMine">Mi partida</button><button class="btn sec" id="mSaveQuit">Guardar y salir</button><button class="btn sec" id="mChar">Cambiar becario</button><button class="btn sec" id="mReset">Empezar de cero</button></div>`);
+  $('#mBack').onclick=()=>closeModal();$('#mMine').onclick=myGame;$('#mSaveQuit').onclick=saveAndQuit;$('#mChar').onclick=()=>{closeModal(true);running=false;renderChars();show('chars')};
   $('#mReset').onclick=()=>{$('#sheet').innerHTML=`<h2>¿Empezar de cero?</h2><p>Se borran las tareas, los puntos y el becario.</p><div class="actions"><button class="btn" id="rY">Empezar de cero</button><button class="btn sec" id="rN">Cancelar</button></div>`;
     $('#rY').onclick=()=>{xlog('terminated',xact('juego','pixel-de-la-frontera','Píxel de la Frontera'),null,{[XAPI.base+'/ext/motivo']:'empezar de cero'});save={char:null,done:[],score:0,floor:1,x:300,results:{},hintsUsed:{}};persist();closeModal(true);running=false;tmpChar=null;show('title')};$('#rN').onclick=()=>closeModal()}}
 function ending(){const max=TASKS.filter(t=>t.pz).length*100,r=save.score/max;
   const rank=r>=.9?'Director/a creativo/a de la Feria':r>=.7?'Diseñador/a senior con abono de caseta':r>=.45?'Junior con duende':'Becario/a con mucho arte';
   openModal(`<h2>¡Feria inaugurada!</h2><p>El alumbrado se enciende, los farolillos brillan y tu cartel está en cada esquina de Jerez.</p><p class="big">${save.score} <span style="font-size:20px">/ ${max} pts</span></p><p>Categoría: <b>${rank}</b>.</p><p>«¿Sabes por qué esta Feria ha salido tan bien? Porque la hemos hecho con mucho arte… y a 300 ppp.» — Pepa, directora de Píxel de la Frontera</p>
-  <div style="border:2px solid var(--albero);border-radius:10px;padding:12px 14px;margin-top:12px"><b>📮 Entrega tu registro</b><p style="margin:6px 0 0">Descarga el archivo con tus acciones y entrégalo a tu profesor/a por correo o en la tarea del Campus Virtual. Lo más importante es el archivo xAPI; el CSV es opcional.</p>
-  <div class="actions"><button class="btn" id="endJson">Descargar registro (xAPI)</button><button class="btn sec" id="endCsv">Descargar CSV</button></div></div>
+  <div style="border:2px solid var(--albero);border-radius:10px;padding:12px 14px;margin-top:12px"><b>📮 Entrega tu partida</b><p style="margin:6px 0 0">Descarga tu archivo y entrégalo a tu profesor/a por correo o en la tarea del Campus Virtual.</p>
+  <div class="actions"><button class="btn" id="endDl">Descargar mi archivo</button></div><p id="endOk" style="margin:6px 0 0"></p></div>
   <div class="actions"><button class="btn sec" onclick="closeModal()">Pasear por la agencia</button></div>`);
-  const tag=(ID?ID.email.split('@')[0]:'sin-identificar')+'_'+new Date().toISOString().slice(0,10);
-  $('#endJson').onclick=()=>saveFile(`pixel-frontera_xapi_${tag}.json`,JSON.stringify(XLOG,null,1));
-  $('#endCsv').onclick=()=>saveFile(`pixel-frontera_eventos_${tag}.csv`,toCSV())}
+  $('#endDl').onclick=async()=>{if(await downloadMyFile())$('#endOk').textContent='✔ Archivo descargado.'}}
 
 /* ============ PANTALLAS ============ */
 function show(id){['title','login','chars','game'].forEach(s=>$('#'+s).classList.toggle('hidden',s!==id));window.scrollTo(0,0)}
