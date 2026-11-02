@@ -753,6 +753,7 @@ setInterval(()=>xflush(),15000);
    terminar una tarea distinta. Al usarlos se descarga una imagen que esconde un código; para
    leerlo hay que aplicar una técnica de la asignatura. El código se canjea en el Campus Virtual
    (allí se controla quién llega primero). Los códigos están SOLO dentro de las imágenes.
+   Una vez descargado, el objeto deja de ser interactivo (la pista del personaje sigue).
    Para cambiar de sitio un objeto: x/y (posición en la planta) y top (altura de la estrella);
    la guía de colocación (menú) los dibuja en morado. */
 const EGGS=[
@@ -801,9 +802,9 @@ function eggInteract(e){const s=eggState(e.id),first=!s.found;
     <p><b>${e.file}</b> · ${e.fmt}</p>
     <p>Parece un archivo normal, pero alguien ha escondido algo dentro. Descárgalo y ábrelo con tu programa de imagen. Si das con lo que esconde, llévalo al Campus Virtual de la asignatura.</p>
     <p style="color:var(--muted)">¿No sabes por dónde empezar? Pregunta a ${NPCS[e.npc].name.split(',')[0]}.</p>
-    <div class="actions"><button class="btn" id="egDl">Descargar el archivo</button><button class="btn sec" id="egNo">Ahora no</button></div><p id="egOk" style="margin:8px 0 0"></p>`);
+    <div class="actions"><button class="btn" id="egDl">Descargar el archivo</button><button class="btn sec" id="egNo">Cerrar</button></div>`);
     $('#egNo').onclick=()=>closeModal();
-    $('#egDl').onclick=async()=>{const ok=await eggDownload(e);if(ok){s.dl=s.dl||Date.now();persist();xlog('interacted',eggAct(e),null,{[EGG_EXT]:'descarga'});$('#egOk').textContent='✔ Archivo descargado.'}}})}
+    $('#egDl').onclick=async()=>{const ok=await eggDownload(e);if(ok){s.dl=s.dl||Date.now();persist();xlog('interacted',eggAct(e),null,{[EGG_EXT]:'descarga'});closeModal();flash('✔ Descargado: '+e.file)}}})}
 function eggBytes(id){const b=atob(EGG_SRC[id]),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
 /* ZIP sin compresión de un único archivo (el visor de claude.ai no deja descargar .tif suelto) */
 function zip1(name,data){const crcT=zip1.t||(zip1.t=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})());
@@ -908,7 +909,7 @@ function nearest(){
   const px=P.x+P.w/2,py=P.y+P.h;let best=null,bd=1e9;const f=cur();
   const cand=[{kind:'elev',x:190,y:GROUND,label:'Ascensor',wide:50}];
   f.objs.forEach(o=>cand.push({kind:'obj',id:o.id,x:o.x,y:o.y,label:o.label}));
-  eggsHere().forEach(e=>cand.push({kind:'egg',egg:e,id:e.id,x:e.x,y:e.y,label:e.label}));
+  eggsHere().filter(e=>!eggState(e.id).dl).forEach(e=>cand.push({kind:'egg',egg:e,id:e.id,x:e.x,y:e.y,label:e.label}));
   f.npcs.forEach(n=>cand.push({kind:'npc',id:n.id,x:n.x,y:n.y||GROUND,label:NPCS[n.id].name}));
   for(const c of cand){const dx=Math.abs(px-c.x),dy=Math.abs(py-c.y);if(dx<52*CS()+(c.wide||0)&&dy<46*CS()&&dx<bd){bd=dx;best=c}}
   return best}
